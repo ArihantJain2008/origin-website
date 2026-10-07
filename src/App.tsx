@@ -10,9 +10,37 @@ import HowItWorks from "./components/HowItWorks";
 import Download from "./components/Download";
 import Changelog from "./components/Changelog";
 import FAQ from "./components/FAQ";
+import { useEffect } from "react";
 import Footer from "./components/Footer";
+import Feedback from "./components/Feedback";
 
 export default function App() {
+  const isFeedbackPage = window.location.pathname === "/feedback";
+
+  useEffect(() => {
+    document.title = isFeedbackPage ? "Feedback & Support — Origin" : "Origin — Your code. One place.";
+    const description = isFeedbackPage
+      ? "Report bugs, request features, ask questions, and help shape the future of Origin."
+      : "Origin is a developer workspace that organizes your projects and gets you coding faster.";
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = description;
+  }, [isFeedbackPage]);
+
+  if (isFeedbackPage) {
+    return (
+      <div className="min-h-screen bg-canvas">
+        <Navbar />
+        <main><Feedback /></main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-canvas">
       <a

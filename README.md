@@ -70,6 +70,18 @@ The website is built with:
 
 The exact dependencies can be found in `package.json`.
 
+## Feedback & Support
+
+The public feedback form is available at `/feedback`. On Vercel, the form posts to `/api/feedback`, which validates the request and inserts it into Supabase using the server-only service role key. The API uses a honeypot, a 32 KB request limit, field limits, and a privacy-conscious in-memory rate limit of five submissions per hashed IP per hour. Set `RATE_LIMIT_SALT` to a long random value; raw IP addresses are never stored.
+
+### Production setup
+
+1. Create a Supabase project and run [`supabase/feedback.sql`](supabase/feedback.sql) in its SQL editor.
+2. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Vercel environment variables. `RATE_LIMIT_SALT` is optional; when omitted, the server-only service key is used as the hash salt. Never expose the service role key as a `VITE_` variable.
+3. Deploy the project. `vercel.json` keeps direct `/feedback` navigation working while Vercel serves `/api/feedback` as a function.
+
+For local UI development, copy `.env.example` to `.env.local`, fill the values, and run `npm run dev`. The API is hosted by Vercel, so use `vercel dev` locally when testing submissions against the function.
+
 ---
 
 ## Requirements

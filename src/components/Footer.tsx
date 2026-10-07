@@ -6,9 +6,11 @@ const links = [
   { label: "Download", href: "#download" },
   { label: "Changelog", href: "#changelog" },
   { label: "FAQ", href: "#faq" },
+  { label: "Feedback", href: "/feedback" },
 ];
 
 export default function Footer() {
+  const isFeedbackPage = window.location.pathname === "/feedback";
   return (
     <footer className="border-t border-border-subtle py-14">
       <div className="mx-auto flex max-w-[1320px] flex-col items-center gap-8 px-5 sm:flex-row sm:justify-between sm:px-8">
@@ -24,7 +26,7 @@ export default function Footer() {
           {links.map((link) => (
             <li key={link.label}>
               <a
-                href={link.href}
+                href={link.href.startsWith("#") && isFeedbackPage ? `/${link.href}` : link.href}
                 target={link.external ? "_blank" : undefined}
                 rel={link.external ? "noreferrer noopener" : undefined}
                 className="flex items-center gap-1.5 text-sm text-secondary transition-colors hover:text-primary"
