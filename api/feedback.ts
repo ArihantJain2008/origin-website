@@ -52,7 +52,7 @@ export default async function handler(req: Request, res: Response) {
 
   const ipHeader = req.headers["x-forwarded-for"] ?? req.headers["x-real-ip"];
   const ip = text(Array.isArray(ipHeader) ? ipHeader[0] : ipHeader).split(",")[0].trim() || "unknown";
-  const salt = process.env.RATE_LIMIT_SALT ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const salt = process.env.RATE_LIMIT_SALT ?? process.env.SUPABASE_SECRET_KEY;
   if (!salt) { fail(res, 503, "Feedback is temporarily unavailable."); return; }
   const key = createHash("sha256").update(`${salt}:${ip}`).digest("hex");
   const now = Date.now();
@@ -61,7 +61,7 @@ export default async function handler(req: Request, res: Response) {
   buckets.set(key, bucket && bucket.resetAt > now ? { count: bucket.count + 1, resetAt: bucket.resetAt } : { count: 1, resetAt: now + 60 * 60 * 1000 });
 
   const url = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = process.env.SUPABASE_SECRET_KEY;
   if (!url || !serviceKey) { fail(res, 503, "Feedback is temporarily unavailable."); return; }
   try {
     const device = additionalDetails.device ?? null;
