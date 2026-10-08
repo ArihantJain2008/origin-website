@@ -1,65 +1,61 @@
-import { useMemo } from "react";
 import { ExternalLink } from "lucide-react";
 import Reveal from "./Reveal";
-import { useReleases } from "@/lib/useReleases";
-import { formatDate, RELEASES_URL, type Release } from "@/lib/github";
+import { RELEASES_URL } from "@/lib/github";
 
 interface ChangelogEntry {
   tag: string;
-  date?: string;
-  latest?: boolean;
-  items: string[];
+  categories: { name: string; items: string[] }[];
   url?: string;
 }
 
-// Static fallback, used only if the GitHub API is unreachable. Every
-// line here is drawn directly from the repository's own release
-// history (CHANGELOG.md and .github/workflows/release.yml) — nothing
-// invented.
+// Consolidated by minor version from the Origin repository's tags,
+// CHANGELOG.md, and v0.1.x release notes.
 const fallbackReleases: ChangelogEntry[] = [
   {
-    tag: "0.1.1",
-    latest: true,
-    items: [
-      "Folder browser improvements",
-      "Project detection improvements",
-      "macOS support",
-      "Performance improvements",
-      "Bug fixes",
-    ],
+    tag: "v0.5",
+    categories: [{ name: "Added", items: [
+      "TODO, dependency, README, health, and project statistics analyzers",
+      "Analysis store, refresh analysis, and loading states",
+    ] }, { name: "Improved", items: [
+      "Project cards, empty states, dashboard, and project intelligence",
+    ] }],
   },
   {
-    tag: "0.1.0-alpha",
-    items: ["React, TypeScript and Tauri application shell", "Initial navigation"],
+    tag: "v0.4",
+    categories: [{ name: "Added", items: [
+      "Dashboard foundation",
+      "Continue Working, search, activity, and statistics",
+    ] }],
+  },
+  {
+    tag: "v0.3",
+    categories: [{ name: "Added", items: [
+      "SQLite persistence and project storage",
+      "Favorites and recent projects",
+    ] }],
+  },
+  {
+    tag: "v0.2",
+    categories: [{ name: "Added", items: [
+      "Native project launcher",
+      "Folder picker and framework detection",
+      "Settings and Rust backend communication",
+    ] }],
+  },
+  {
+    tag: "v0.1",
+    categories: [{ name: "Added", items: [
+      "React, TypeScript, and Tauri application",
+      "Application shell and navigation",
+    ] }, { name: "Improved", items: [
+      "Folder browser and project detection",
+      "Performance and startup behavior",
+    ] }, { name: "Fixed", items: ["Bug fixes"] }, { name: "Platform", items: ["macOS support"] }],
   },
 ];
 
-function parseBody(body: string | null): string[] {
-  if (!body) return [];
-  return body
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("-") || line.startsWith("*"))
-    .map((line) => line.replace(/^[-*]\s*/, ""))
-    .filter(Boolean)
-    .slice(0, 8);
-}
-
 export default function Changelog() {
-  const { releases, status } = useReleases();
-
-  const list = useMemo<ChangelogEntry[]>(() => {
-    if (status === "ready" && releases.length > 0) {
-      return releases.slice(0, 5).map((r: Release, i: number) => ({
-        tag: r.tag_name.replace(/^v/, ""),
-        date: formatDate(r.published_at),
-        latest: i === 0,
-        items: parseBody(r.body),
-        url: r.html_url,
-      }));
-    }
-    return fallbackReleases;
-  }, [releases, status]);
+  const list = fallbackReleases;
 
   return (
     <section id="changelog" className="relative py-24 sm:py-32">
@@ -69,7 +65,7 @@ export default function Changelog() {
             Changelog
           </h2>
           <p className="mt-4 text-[17px] leading-relaxed text-secondary">
-            What&apos;s shipped, straight from GitHub Releases.
+            What&apos;s shipped across Origin&apos;s release history.
           </p>
         </Reveal>
 
@@ -82,26 +78,25 @@ export default function Changelog() {
                     <span className="font-mono text-[15px] font-semibold text-primary">
                       {release.tag}
                     </span>
-                    {release.latest && (
-                      <span className="rounded-full bg-accent-muted px-2.5 py-0.5 text-[11px] font-medium text-accent">
-                        Latest
-                      </span>
-                    )}
-                    {release.date && (
-                      <span className="text-xs text-tertiary">{release.date}</span>
-                    )}
                   </div>
 
-                  {release.items.length > 0 && (
-                    <ul className="mt-3.5 flex flex-col gap-1.5">
-                      {release.items.map((item) => (
-                        <li key={item} className="flex items-start gap-2 text-sm text-secondary">
-                          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-tertiary" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <div className="mt-3.5 flex flex-col gap-3">
+                    {release.categories.map((category) => (
+                      <div key={category.name}>
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-tertiary">
+                          {category.name}
+                        </h3>
+                        <ul className="mt-1.5 flex flex-col gap-1.5">
+                          {category.items.map((item) => (
+                            <li key={item} className="flex items-start gap-2 text-sm text-secondary">
+                              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-tertiary" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
 
                   {release.url && (
                     <a
