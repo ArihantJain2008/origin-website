@@ -12,6 +12,15 @@ interface ChangelogEntry {
 // CHANGELOG.md, and v0.1.x release notes.
 const fallbackReleases: ChangelogEntry[] = [
   {
+    tag: "v1.0.0",
+    categories: [{ name: "Released", items: [
+      "Stable desktop release for Windows and macOS",
+      "macOS Apple Silicon and Intel builds",
+      "Signed updater artifacts published with the release",
+    ] }],
+    url: "https://github.com/ArihantJain2008/origin/releases/tag/v1.0.0",
+  },
+  {
     tag: "v0.5",
     categories: [{ name: "Added", items: [
       "TODO, dependency, README, health, and project statistics analyzers",

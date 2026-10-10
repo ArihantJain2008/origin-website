@@ -1,7 +1,7 @@
 {
   "name": "origin-website",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Public marketing website for Origin — a developer workspace and project launcher.",
   "scripts": {
