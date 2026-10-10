@@ -6,6 +6,7 @@ const links = [
   { label: "Features", href: "#features" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Changelog", href: "#changelog" },
+  { label: "Mac install", href: "#macos-install" },
   { label: "FAQ", href: "#faq" },
   { label: "Feedback", href: "/feedback" },
 ];

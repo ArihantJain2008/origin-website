@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import Reveal from "./Reveal";
+import { ISSUES_URL, RELEASES_URL } from "@/lib/github";
 
 const faqs = [
   {
@@ -38,6 +39,31 @@ const faqs = [
   {
     q: "Is Origin free?",
     a: "Yes, Origin is free to download.",
+  },
+  {
+    q: "Why does macOS say Origin is damaged and can't be opened?",
+    a: (
+      <>
+        <p>
+          This message does not always mean the files are physically damaged. It can be caused by
+          signature validation, an incomplete download, incorrect packaging, quarantine, or other
+          Gatekeeper restrictions.
+        </p>
+        <p className="mt-3">Try these safe checks:</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>Verify that the download came from the official <a className="text-accent hover:underline" href={RELEASES_URL}>Origin release page</a>.</li>
+          <li>Download the artifact again if the first copy may be incomplete.</li>
+          <li>Confirm that you selected the correct Mac architecture.</li>
+          <li>Follow macOS&apos;s available security override instructions where appropriate.</li>
+          <li><a className="text-accent hover:underline" href={ISSUES_URL}>Report the problem</a> if the error persists.</li>
+        </ul>
+        <p className="mt-3">
+          Include your macOS version, Mac CPU architecture, Origin version, artifact filename, and
+          the exact error message. Do not disable Gatekeeper globally or automatically remove
+          quarantine attributes.
+        </p>
+      </>
+    ) as ReactNode,
   },
 ];
 

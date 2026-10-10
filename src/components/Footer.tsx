@@ -5,6 +5,7 @@ const links = [
   { label: "GitHub", href: REPO_URL, external: true },
   { label: "Download", href: "#download" },
   { label: "Changelog", href: "#changelog" },
+  { label: "Mac install", href: "#macos-install" },
   { label: "FAQ", href: "#faq" },
   { label: "Feedback", href: "/feedback" },
 ];

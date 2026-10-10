@@ -9,6 +9,7 @@ export const REPO_NAME = "origin";
 export const REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}`;
 export const RELEASES_URL = `${REPO_URL}/releases`;
 export const LATEST_RELEASE_URL = `${REPO_URL}/releases/latest`;
+export const ISSUES_URL = `${REPO_URL}/issues`;
 
 export interface ReleaseAsset {
   name: string;
@@ -77,7 +78,7 @@ function assetPlatform(filename: string): Platform | null {
   if (name.endsWith(".dmg") || name.endsWith(".app.tar.gz")) {
     if (name.includes("aarch64") || name.includes("arm64")) return "macos-arm";
     if (name.includes("x64") || name.includes("x86_64") || name.includes("intel")) return "macos-intel";
-    return "macos-arm"; // ambiguous dmg — caller should still surface an Intel option
+    return null;
   }
   return null;
 }
