@@ -13,13 +13,17 @@ import FAQ from "./components/FAQ";
 import { useEffect } from "react";
 import Footer from "./components/Footer";
 import Feedback from "./components/Feedback";
+import Admin from "./components/Admin";
 
 export default function App() {
   const isFeedbackPage = window.location.pathname === "/feedback";
+  const isAdminPage = window.location.pathname.startsWith("/admin");
 
   useEffect(() => {
-    document.title = isFeedbackPage ? "Feedback & Support — Origin" : "Origin — Your code. One place.";
-    const description = isFeedbackPage
+    document.title = isAdminPage ? "Admin — Origin" : isFeedbackPage ? "Feedback & Support — Origin" : "Origin — Your code. One place.";
+    const description = isAdminPage
+      ? "Origin administration."
+      : isFeedbackPage
       ? "Report bugs, request features, ask questions, and help shape the future of Origin."
       : "Origin is a developer workspace that organizes your projects and gets you coding faster.";
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
@@ -29,7 +33,9 @@ export default function App() {
       document.head.appendChild(meta);
     }
     meta.content = description;
-  }, [isFeedbackPage]);
+  }, [isFeedbackPage, isAdminPage]);
+
+  if (isAdminPage) return <Admin />;
 
   if (isFeedbackPage) {
     return (

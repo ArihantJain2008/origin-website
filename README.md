@@ -70,17 +70,32 @@ The website is built with:
 
 The exact dependencies can be found in `package.json`.
 
-## Feedback & Support
+## Feedback & Admin
 
-The public feedback form is available at `/feedback`. On Vercel, the form posts to `/api/feedback`, which validates the request and inserts it into Supabase using the server-only secret key. The API uses a honeypot, a 32 KB request limit, field limits, and a privacy-conscious in-memory rate limit of five submissions per hashed IP per hour. Set `RATE_LIMIT_SALT` to a long random value; raw IP addresses are never stored.
+The public feedback form is available at `/feedback`. It posts to `/api/feedback`, which validates and persists submissions in Supabase using the server-only secret key. It applies field limits, a honeypot, a 32 KB request limit, and an in-memory limit of five submissions per hashed IP per hour. Raw IP addresses are never stored.
+
+The protected admin workspace is available at `/admin`. It uses server-side authentication with an `HttpOnly`, `Secure`, `SameSite=Lax` signed session cookie. The dashboard APIs independently verify that session before reading, updating, or deleting feedback; the frontend route is not a security boundary.
 
 ### Production setup
 
-1. Create a Supabase project and run [`supabase/feedback.sql`](supabase/feedback.sql) in its SQL editor.
-2. Add `SUPABASE_URL` and `SUPABASE_SECRET_KEY` to Vercel environment variables. `RATE_LIMIT_SALT` is optional; when omitted, the server-only secret key is used as the hash salt. Never expose the secret key as a `VITE_` variable.
-3. Deploy the project. `vercel.json` keeps direct `/feedback` navigation working while Vercel serves `/api/feedback` as a function.
+1. Create a Supabase project and run [`supabase/feedback.sql`](supabase/feedback.sql) in its SQL editor. For an existing installation, run the full file to migrate legacy statuses.
+2. Add these Vercel environment variables. Never prefix any of them with `VITE_`:
+	- `SUPABASE_URL`: Supabase project URL.
+	- `SUPABASE_SECRET_KEY`: server-only Supabase service-role/secret key.
+	- `ADMIN_EMAIL`: the single administrator email address.
+	- `ADMIN_PASSWORD_HASH`: a generated scrypt hash, never the plaintext password.
+	- `ADMIN_SESSION_SECRET`: at least 32 random bytes, used to sign sessions.
+	- `RATE_LIMIT_SALT`: at least 32 random bytes for IP hashing (optional fallback is the Supabase secret).
+3. Generate the first administrator hash locally, without putting the password in source control:
 
-For local UI development, copy `.env.example` to `.env.local`, fill the values, and run `npm run dev`. The API is hosted by Vercel, so use `vercel dev` locally when testing submissions against the function.
+```powershell
+node -e "const c=require('node:crypto'); const p=process.stdin.isTTY ? (()=>{throw Error('Pipe the password on stdin')})() : require('node:fs').readFileSync(0,'utf8').trim(); const s=c.randomBytes(16).toString('base64url'); console.log('scrypt$'+s+'$'+c.scryptSync(p,s,64).toString('base64url'))" < $env:ADMIN_PASSWORD_FILE
+```
+
+Set the resulting value as `ADMIN_PASSWORD_HASH` and set `ADMIN_SESSION_SECRET` and `RATE_LIMIT_SALT` to independently generated random values. Store these only in the Vercel project environment and local untracked `.env.local`.
+4. Use `vercel dev` for local end-to-end API testing. `npm run dev` is suitable for frontend-only work; Vite does not execute the `api/` functions.
+
+Login attempts are rate-limited per server instance. For multi-instance deployments, put an edge/WAF rate limit in front of `/api/admin/login` as an additional control. Rotate `ADMIN_SESSION_SECRET` to invalidate all active sessions.
 
 ---
 

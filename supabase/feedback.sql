@@ -8,9 +8,18 @@ create table if not exists public.feedback (
   device text,
   os text,
   origin_version text,
-  status text not null default 'new' check (status in ('new', 'planned', 'in_progress', 'completed', 'rejected')),
+  status text not null default 'new' check (status in ('new', 'reviewed', 'resolved')),
   created_at timestamptz not null default now()
 );
 
 alter table public.feedback enable row level security;
 revoke all on table public.feedback from anon, authenticated;
+
+-- Run this block when upgrading an existing table created by the previous schema.
+alter table public.feedback drop constraint if exists feedback_status_check;
+update public.feedback set status = case
+  when status in ('completed', 'resolved') then 'resolved'
+  when status in ('planned', 'in_progress', 'reviewed') then 'reviewed'
+  else 'new'
+end;
+alter table public.feedback add constraint feedback_status_check check (status in ('new', 'reviewed', 'resolved'));
