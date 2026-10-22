@@ -1,13 +1,13 @@
-import audit from "../../lib/api-handlers/admin/audit";
-import community from "../../lib/api-handlers/admin/community";
-import downloads from "../../lib/api-handlers/admin/downloads";
-import feedback from "../../lib/api-handlers/admin/feedback";
-import installers from "../../lib/api-handlers/admin/installers";
-import login from "../../lib/api-handlers/admin/login";
-import logout from "../../lib/api-handlers/admin/logout";
-import me from "../../lib/api-handlers/admin/me";
-import sessions from "../../lib/api-handlers/admin/sessions";
-import users from "../../lib/api-handlers/admin/users";
+import audit from "../../lib/api-handlers/admin/audit.js";
+import community from "../../lib/api-handlers/admin/community.js";
+import downloads from "../../lib/api-handlers/admin/downloads.js";
+import feedback from "../../lib/api-handlers/admin/feedback.js";
+import installers from "../../lib/api-handlers/admin/installers.js";
+import login from "../../lib/api-handlers/admin/login.js";
+import logout from "../../lib/api-handlers/admin/logout.js";
+import me from "../../lib/api-handlers/admin/me.js";
+import sessions from "../../lib/api-handlers/admin/sessions.js";
+import users from "../../lib/api-handlers/admin/users.js";
 
 type Request = {
   method?: string;

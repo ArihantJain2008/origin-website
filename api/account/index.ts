@@ -1,4 +1,4 @@
-import { authConfig, authenticatedUser, clearAuthCookies, currentProfile, fail, jsonBody, sameOrigin, setAuthCookies, userDatabase, type AccountRequest, type AccountResponse } from "../_account";
+import { authConfig, authenticatedUser, clearAuthCookies, currentProfile, fail, jsonBody, sameOrigin, setAuthCookies, userDatabase, type AccountRequest, type AccountResponse } from "../_account.js";
 
 type Tokens = { access_token: string; refresh_token: string; expires_in?: number; user?: { id: string; email?: string } };
 const attempts = new Map<string, { count: number; until: number }>();

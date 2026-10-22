@@ -1,4 +1,4 @@
-import { authenticatedUser, authConfig, fail, jsonBody, sameOrigin, userDatabase, type AccountRequest, type AccountResponse } from "../../api/_account";
+import { authenticatedUser, authConfig, fail, jsonBody, sameOrigin, userDatabase, type AccountRequest, type AccountResponse } from "../../api/_account.js";
 import { isUuid } from "../../api/_installers.js";
 
 const requests = new Map<string, { count: number; until: number }>();

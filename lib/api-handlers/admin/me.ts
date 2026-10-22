@@ -1,4 +1,4 @@
-import { requireAdmin } from "../../../api/_auth";
+import { requireAdmin } from "../../../api/_auth.js";
 
 export default async function handler(req: { headers: Record<string, string | string[] | undefined> }, res: { status: (code: number) => any; json: (body: unknown) => void; setHeader: (name: string, value: string) => void }) {
   const session = await requireAdmin(req, res);

@@ -13,9 +13,9 @@ downloadsCode = downloadsCode.replace('from "../../api/_installers.js"', `from "
 const downloadsModule = toModuleUrl(downloadsCode);
 const downloadSource = await readFile(new URL("../api/download.ts", import.meta.url), "utf8");
 let downloadCode = ts.transpileModule(downloadSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-downloadCode = downloadCode.replace('from "../lib/api-handlers/downloads"', `from "${downloadsModule}"`)
+downloadCode = downloadCode.replace('from "../lib/api-handlers/downloads.js"', `from "${downloadsModule}"`)
   .replace('from "./_installers.js"', `from "${installersModule}"`)
-  .replace('from "./_account"', `from "${accountModule}"`);
+  .replace('from "./_account.js"', `from "${accountModule}"`);
 const { default: handler } = await import(toModuleUrl(downloadCode));
 
 function toModuleUrl(code) { return `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`; }

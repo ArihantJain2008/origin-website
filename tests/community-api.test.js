@@ -10,7 +10,7 @@ const installerSource = await readFile(new URL("../api/_installers.js", import.m
 const installerUrl = moduleUrl(ts.transpileModule(installerSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
 const source = await readFile(new URL("../lib/api-handlers/community.ts", import.meta.url), "utf8");
 const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-  .replace('from "../../api/_account"', `from "${accountUrl}"`)
+  .replace('from "../../api/_account.js"', `from "${accountUrl}"`)
   .replace('from "../../api/_installers.js"', `from "${installerUrl}"`);
 const { default: handler } = await import(moduleUrl(code));
 

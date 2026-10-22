@@ -7,7 +7,7 @@ const authSource = await readFile(new URL("../api/_auth.ts", import.meta.url), "
 const authCode = ts.transpileModule(authSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
 const authUrl = `data:text/javascript;base64,${Buffer.from(authCode).toString("base64")}`;
 const routeSource = await readFile(new URL("../lib/api-handlers/admin/community.ts", import.meta.url), "utf8");
-const routeCode = ts.transpileModule(routeSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace('from "../../../api/_auth"', `from "${authUrl}"`);
+const routeCode = ts.transpileModule(routeSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace('from "../../../api/_auth.js"', `from "${authUrl}"`);
 const { default: handler } = await import(`data:text/javascript;base64,${Buffer.from(routeCode).toString("base64")}`);
 
 test("admin moderation endpoint rejects unauthenticated requests before reading private records", async () => {

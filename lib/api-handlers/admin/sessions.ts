@@ -1,4 +1,4 @@
-import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../../../api/_auth";
+import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../../../api/_auth.js";
 
 type Request = { method?: string; headers: Record<string, string | string[] | undefined>; body?: unknown };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };

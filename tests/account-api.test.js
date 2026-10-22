@@ -7,7 +7,7 @@ function moduleUrl(source) { return `data:text/javascript;base64,${Buffer.from(s
 const helperSource = await readFile(new URL("../api/_account.ts", import.meta.url), "utf8");
 const helperUrl = moduleUrl(ts.transpileModule(helperSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
 const routeSource = await readFile(new URL("../api/account/index.ts", import.meta.url), "utf8");
-const routeCode = ts.transpileModule(routeSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace('from "../_account"', `from "${helperUrl}"`);
+const routeCode = ts.transpileModule(routeSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText.replace('from "../_account.js"', `from "${helperUrl}"`);
 const { default: handler } = await import(moduleUrl(routeCode));
 
 async function withEnv(fetcherOrRun, maybeRun) {

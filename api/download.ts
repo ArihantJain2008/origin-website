@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { visitorIdentity } from "../lib/api-handlers/downloads";
+import { visitorIdentity } from "../lib/api-handlers/downloads.js";
 import { fetchOfficialInstaller, isUuid, isWholeInstallerTransfer, waitForDrainOrClose } from "./_installers.js";
-import { authenticatedUser } from "./_account";
+import { authenticatedUser } from "./_account.js";
 
 type Request = { method?: string; headers: Record<string, string | string[] | undefined>; query?: Record<string, string | string[] | undefined> };
 type Response = { statusCode?: number; headersSent?: boolean; writableFinished?: boolean; destroyed?: boolean; status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string | string[]) => void; write: (chunk: Uint8Array) => boolean; end: () => void; on: (event: string, cb: (...args: unknown[]) => void) => void };

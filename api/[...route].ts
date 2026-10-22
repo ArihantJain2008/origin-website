@@ -1,7 +1,7 @@
-import community from "../lib/api-handlers/community";
-import downloads from "../lib/api-handlers/downloads";
-import feedback from "../lib/api-handlers/feedback";
-import installers from "../lib/api-handlers/installers";
+import community from "../lib/api-handlers/community.js";
+import downloads from "../lib/api-handlers/downloads.js";
+import feedback from "../lib/api-handlers/feedback.js";
+import installers from "../lib/api-handlers/installers.js";
 
 type Request = {
   method?: string;
