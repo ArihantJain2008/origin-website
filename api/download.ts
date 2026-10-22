@@ -89,7 +89,7 @@ export default async function handler(req: Request, res: Response) {
       const reader = upstream.body.getReader();
       while (true) {
         const next = await Promise.race([
-          reader.read().then((result) => ({ kind: "read" as const, result })),
+          reader.read().then((result: ReadableStreamReadResult<Uint8Array>) => ({ kind: "read" as const, result })),
           clientClose.then(() => ({ kind: "closed" as const })),
         ]);
         if (next.kind === "closed") { await recordInterrupted(reader); return; }
