@@ -1,6 +1,6 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
-const COOKIE_NAME = "origin_admin_session";
+const COOKIE_NAME = "__Host-origin_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -12,15 +12,18 @@ function header(req: Request, name: string) {
   return Array.isArray(value) ? value[0] : value ?? "";
 }
 
-function base64url(value: string | Buffer) { return Buffer.from(value).toString("base64url"); }
-function secret() { return process.env.ADMIN_SESSION_SECRET ?? ""; }
+function adminDb() { const url = process.env.SUPABASE_URL?.replace(/\/$/, ""); const key = process.env.SUPABASE_SECRET_KEY; return url && key ? { url, key } : null; }
+function sessionHash(token: string) { return createHash("sha256").update(token).digest("hex"); }
 
 export function passwordHash(password: string, encoded: string) {
-  const [, salt, expected] = encoded.split("$");
-  if (!salt || !expected) return false;
-  const actual = scryptSync(password, salt, 64);
-  const expectedBuffer = Buffer.from(expected, "base64url");
-  return expectedBuffer.length === actual.length && timingSafeEqual(actual, expectedBuffer);
+  if (password.length > 1024 || encoded.length > 256) return false;
+  const [algorithm, salt, expected] = encoded.split("$");
+  if (algorithm !== "scrypt" || !salt || !/^[A-Za-z0-9_-]{16,64}$/.test(salt) || !expected || !/^[A-Za-z0-9_-]{80,100}$/.test(expected)) return false;
+  try {
+    const actual = scryptSync(password, salt, 64);
+    const expectedBuffer = Buffer.from(expected, "base64url");
+    return expectedBuffer.length === actual.length && timingSafeEqual(actual, expectedBuffer);
+  } catch { return false; }
 }
 
 export function makePasswordHash(password: string) {
@@ -28,42 +31,68 @@ export function makePasswordHash(password: string) {
   return `scrypt$${salt}$${scryptSync(password, salt, 64).toString("base64url")}`;
 }
 
-export function createSession(email: string) {
-  const payload = base64url(JSON.stringify({ email, exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS }));
-  const signature = createHmac("sha256", secret()).update(payload).digest("base64url");
-  return `${payload}.${signature}`;
+export async function createSession(email: string) {
+  const db = adminDb();
+  if (!db) throw new Error("Admin session storage is unavailable");
+  const token = randomBytes(32).toString("base64url");
+  const response = await fetch(`${db.url}/rest/v1/admin_sessions`, { method: "POST", headers: { apikey: db.key, Authorization: `Bearer ${db.key}`, "Content-Type": "application/json", Prefer: "return=representation" }, body: JSON.stringify({ token_hash: sessionHash(token), admin_email: email, expires_at: new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString() }) });
+  if (!response.ok) throw new Error("Admin session could not be stored");
+  const [session] = await response.json() as Array<{ id: string }>;
+  if (!session?.id || !await writeAdminAudit(email, "session.create", "admin_session", session.id)) {
+    if (session?.id) await revokeSession(session.id);
+    throw new Error("Admin session audit could not be stored");
+  }
+  return token;
 }
 
 function parseCookies(value: string) {
   return Object.fromEntries(value.split(";").map((part) => part.trim().split("=")).filter(([key, item]) => key && item));
 }
 
-export function getSession(req: Request) {
+export async function getSession(req: Request) {
   const token = parseCookies(header(req, "cookie"))[COOKIE_NAME];
-  if (!token || !secret()) return null;
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) return null;
-  const expected = createHmac("sha256", secret()).update(payload).digest("base64url");
-  if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  const db = adminDb();
+  if (!token || !/^[A-Za-z0-9_-]{40,60}$/.test(token) || !db) return null;
   try {
-    const session = JSON.parse(Buffer.from(payload, "base64url").toString()) as { email?: string; exp?: number };
-    return session.email && session.exp && session.exp > Math.floor(Date.now() / 1000) ? session : null;
+    const query = new URLSearchParams({ token_hash: `eq.${sessionHash(token)}`, revoked_at: "is.null", expires_at: `gt.${new Date().toISOString()}`, select: "id,admin_email,expires_at" });
+    const response = await fetch(`${db.url}/rest/v1/admin_sessions?${query}`, { headers: { apikey: db.key, Authorization: `Bearer ${db.key}` } });
+    if (!response.ok) return null;
+    const [session] = await response.json() as Array<{ id: string; admin_email: string; expires_at: string }>;
+    if (!session || session.admin_email.trim().toLowerCase() !== process.env.ADMIN_EMAIL?.trim().toLowerCase()) return null;
+    return { id: session.id, email: session.admin_email, expiresAt: session.expires_at, token };
   } catch { return null; }
 }
 
 export function setSessionCookie(res: Response, token: string) { res.setHeader("Set-Cookie", `${COOKIE_NAME}=${token}; Max-Age=${SESSION_TTL_SECONDS}; Path=/; HttpOnly; Secure; SameSite=Lax`); }
 export function clearSessionCookie(res: Response) { res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax`); }
 
-export function requireAdmin(req: Request, res: Response) {
-  const session = getSession(req);
-  if (!session || !process.env.ADMIN_EMAIL || session.email !== process.env.ADMIN_EMAIL) { res.status(401).json({ ok: false, error: "Authentication required." }); return null; }
+export async function revokeSession(sessionId: string) {
+  const db = adminDb(); if (!db) return false;
+  const response = await fetch(`${db.url}/rest/v1/admin_sessions?id=eq.${encodeURIComponent(sessionId)}&revoked_at=is.null`, { method: "PATCH", headers: { apikey: db.key, Authorization: `Bearer ${db.key}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ revoked_at: new Date().toISOString() }) });
+  return response.ok;
+}
+export async function writeAdminAudit(adminEmail: string, action: string, entityType: string, entityId: string | null, details: Record<string, unknown> = {}) {
+  const db = adminDb(); if (!db) return false;
+  const response = await fetch(`${db.url}/rest/v1/admin_audit_logs`, { method: "POST", headers: { apikey: db.key, Authorization: `Bearer ${db.key}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ admin_email: adminEmail, action, entity_type: entityType, entity_id: entityId, details }) });
+  return response.ok;
+}
+
+export async function requireAdmin(req: Request, res: Response) {
+  const session = await getSession(req);
+  if (!session || !process.env.ADMIN_EMAIL || session.email?.toLowerCase() !== process.env.ADMIN_EMAIL.trim().toLowerCase()) { res.status(401).json({ ok: false, error: "Authentication required." }); return null; }
+  if (Math.random() < 0.05) {
+    const db = adminDb();
+    if (db) void fetch(`${db.url}/rest/v1/admin_sessions?id=eq.${session.id}`, { method: "PATCH", headers: { apikey: db.key, Authorization: `Bearer ${db.key}`, "Content-Type": "application/json" }, body: JSON.stringify({ last_seen_at: new Date().toISOString() }) });
+  }
   return session;
 }
 
 export function checkSameOrigin(req: Request, res: Response) {
   const origin = header(req, "origin");
   const host = header(req, "x-forwarded-host") || header(req, "host");
-  if (origin && host && new URL(origin).host !== host) { res.status(403).json({ ok: false, error: "Invalid request origin." }); return false; }
+  if (!origin || !host) { res.status(403).json({ ok: false, error: "Request origin is required." }); return false; }
+  try { if (new URL(origin).host.toLowerCase() !== host.toLowerCase()) { res.status(403).json({ ok: false, error: "Invalid request origin." }); return false; } }
+  catch { res.status(403).json({ ok: false, error: "Invalid request origin." }); return false; }
   return true;
 }
 

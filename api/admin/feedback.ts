@@ -1,4 +1,4 @@
-import { checkSameOrigin, jsonBody, requireAdmin } from "../_auth";
+import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../_auth";
 
 type Request = { method?: string; query?: Record<string, string | string[] | undefined>; headers: Record<string, string | string[] | undefined>; body?: unknown };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };
@@ -11,7 +11,7 @@ function respondError(res: Response, status: number, error: string) { res.status
 
 export default async function handler(req: Request, res: Response) {
   res.setHeader("Cache-Control", "no-store");
-  if (!requireAdmin(req, res)) return;
+  const admin = await requireAdmin(req, res); if (!admin) return;
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SECRET_KEY) { respondError(res, 503, "Database is not configured."); return; }
   if (req.method === "GET") {
     const page = Math.max(1, Number(queryValue(req, "page") ?? 1) || 1);
@@ -36,11 +36,13 @@ export default async function handler(req: Request, res: Response) {
     if (!statuses.has(status)) { respondError(res, 400, "Choose a valid status."); return; }
     const response = await fetch(databaseUrl(`feedback?id=eq.${id}`), { method: "PATCH", headers: { ...databaseHeaders(), Prefer: "return=minimal" }, body: JSON.stringify({ status }) });
     if (!response.ok) { respondError(res, 503, "Feedback could not be updated."); return; }
+    await writeAdminAudit(admin.email, "feedback.status", "feedback", id, { status });
     res.status(200).json({ ok: true }); return;
   }
   if (req.method === "DELETE") {
     const response = await fetch(databaseUrl(`feedback?id=eq.${id}`), { method: "DELETE", headers: databaseHeaders() });
     if (!response.ok) { respondError(res, 503, "Feedback could not be deleted."); return; }
+    await writeAdminAudit(admin.email, "feedback.delete", "feedback", id);
     res.status(200).json({ ok: true }); return;
   }
   res.setHeader("Allow", "GET, PATCH, DELETE"); respondError(res, 405, "Method not allowed.");

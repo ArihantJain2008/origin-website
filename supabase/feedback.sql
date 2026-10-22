@@ -14,6 +14,7 @@ create table if not exists public.feedback (
 
 alter table public.feedback enable row level security;
 revoke all on table public.feedback from anon, authenticated;
+grant all on table public.feedback to service_role;
 
 -- Run this block when upgrading an existing table created by the previous schema.
 alter table public.feedback drop constraint if exists feedback_status_check;

@@ -6,13 +6,15 @@ const links = [
   { label: "Features", href: "#features" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Changelog", href: "#changelog" },
+  { label: "Community", href: "#community" },
   { label: "Mac install", href: "#macos-install" },
   { label: "FAQ", href: "#faq" },
   { label: "Feedback", href: "/feedback" },
+  { label: "Account", href: "/account" },
 ];
 
 export default function Navbar() {
-  const isFeedbackPage = window.location.pathname === "/feedback";
+  const isStandalonePage = window.location.pathname !== "/";
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -37,7 +39,7 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 sm:px-8">
-        <a href={isFeedbackPage ? "/" : "#top"} className="flex items-center gap-2.5" aria-label="Origin home">
+        <a href={isStandalonePage ? "/" : "#top"} className="flex items-center gap-2.5" aria-label="Origin home">
           <img src="/favicon.png" alt="" className="h-7 w-7 rounded-[7px]" width={28} height={28} />
           <span className="text-[15px] font-semibold tracking-tight text-primary">origin</span>
         </a>
@@ -46,7 +48,7 @@ export default function Navbar() {
           {links.map((link) => (
             <li key={link.href}>
               <a
-                href={link.href.startsWith("#") && isFeedbackPage ? `/${link.href}` : link.href}
+                href={link.href.startsWith("#") && isStandalonePage ? `/${link.href}` : link.href}
                 className="text-sm text-secondary transition-colors hover:text-primary"
               >
                 {link.label}
@@ -90,7 +92,7 @@ export default function Navbar() {
             {links.map((link) => (
               <li key={link.href}>
                 <a
-                  href={link.href.startsWith("#") && isFeedbackPage ? `/${link.href}` : link.href}
+                  href={link.href.startsWith("#") && isStandalonePage ? `/${link.href}` : link.href}
                   onClick={() => setOpen(false)}
                   className="block rounded-lg px-2 py-3 text-[15px] text-secondary transition-colors hover:bg-hover hover:text-primary"
                 >
