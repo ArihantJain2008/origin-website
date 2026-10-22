@@ -1,4 +1,4 @@
-import { checkSameOrigin, clearSessionCookie, requireAdmin, revokeSession, writeAdminAudit } from "../_auth";
+import { checkSameOrigin, clearSessionCookie, requireAdmin, revokeSession, writeAdminAudit } from "../../../api/_auth";
 
 export default async function handler(req: { method?: string; headers: Record<string, string | string[] | undefined> }, res: { status: (code: number) => any; json: (body: unknown) => void; setHeader: (name: string, value: string) => void }) {
   if (req.method !== "POST") { res.status(405).json({ ok: false, error: "Only POST requests are accepted." }); return; }

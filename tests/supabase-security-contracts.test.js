@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const schema = await readFile(new URL("../supabase/origin_features.sql", import.meta.url), "utf8");
-const community = await readFile(new URL("../api/community.ts", import.meta.url), "utf8");
+const community = await readFile(new URL("../lib/api-handlers/community.ts", import.meta.url), "utf8");
 
 test("download schema deduplicates each release per authenticated user or anonymous visitor", () => {
   assert.match(schema, /unique\s*\(version_id,\s*user_id\)/i);

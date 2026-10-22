@@ -8,10 +8,10 @@ const accountSource = await readFile(new URL("../api/_account.ts", import.meta.u
 const accountUrl = moduleUrl(ts.transpileModule(accountSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
 const installerSource = await readFile(new URL("../api/_installers.js", import.meta.url), "utf8");
 const installerUrl = moduleUrl(ts.transpileModule(installerSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
-const source = await readFile(new URL("../api/community.ts", import.meta.url), "utf8");
+const source = await readFile(new URL("../lib/api-handlers/community.ts", import.meta.url), "utf8");
 const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText
-  .replace('from "./_account"', `from "${accountUrl}"`)
-  .replace('from "./_installers.js"', `from "${installerUrl}"`);
+  .replace('from "../../api/_account"', `from "${accountUrl}"`)
+  .replace('from "../../api/_installers.js"', `from "${installerUrl}"`);
 const { default: handler } = await import(moduleUrl(code));
 
 const appId = "24c2d90b-7b2e-4d76-a960-bbbf2238c229";

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { visitorIdentity } from "./downloads";
+import { visitorIdentity } from "../lib/api-handlers/downloads";
 import { fetchOfficialInstaller, isUuid, isWholeInstallerTransfer, waitForDrainOrClose } from "./_installers.js";
 import { authenticatedUser } from "./_account";
 

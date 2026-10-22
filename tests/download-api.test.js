@@ -7,13 +7,13 @@ const installersSource = await readFile(new URL("../api/_installers.js", import.
 const installersModule = toModuleUrl(ts.transpileModule(installersSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
 const accountSource = await readFile(new URL("../api/_account.ts", import.meta.url), "utf8");
 const accountModule = toModuleUrl(ts.transpileModule(accountSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
-const downloadsSource = await readFile(new URL("../api/downloads.ts", import.meta.url), "utf8");
+const downloadsSource = await readFile(new URL("../lib/api-handlers/downloads.ts", import.meta.url), "utf8");
 let downloadsCode = ts.transpileModule(downloadsSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-downloadsCode = downloadsCode.replace('from "./_installers.js"', `from "${installersModule}"`);
+downloadsCode = downloadsCode.replace('from "../../api/_installers.js"', `from "${installersModule}"`);
 const downloadsModule = toModuleUrl(downloadsCode);
 const downloadSource = await readFile(new URL("../api/download.ts", import.meta.url), "utf8");
 let downloadCode = ts.transpileModule(downloadSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-downloadCode = downloadCode.replace('from "./downloads"', `from "${downloadsModule}"`)
+downloadCode = downloadCode.replace('from "../lib/api-handlers/downloads"', `from "${downloadsModule}"`)
   .replace('from "./_installers.js"', `from "${installersModule}"`)
   .replace('from "./_account"', `from "${accountModule}"`);
 const { default: handler } = await import(toModuleUrl(downloadCode));

@@ -1,4 +1,4 @@
-import { requireAdmin } from "../_auth";
+import { requireAdmin } from "../../../api/_auth";
 type Request = { method?: string; headers: Record<string, string | string[] | undefined> };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };
 export default async function handler(req: Request, res: Response) {

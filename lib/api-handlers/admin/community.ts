@@ -1,4 +1,4 @@
-import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../_auth";
+import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../../../api/_auth";
 
 type Request = { method?: string; query?: Record<string, string | string[] | undefined>; headers: Record<string, string | string[] | undefined>; body?: unknown };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };

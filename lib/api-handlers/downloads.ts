@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { isUuid } from "./_installers.js";
+import { isUuid } from "../../api/_installers.js";
 
 type Request = { method?: string; headers: Record<string, string | string[] | undefined>; query?: Record<string, string | string[] | undefined> };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };

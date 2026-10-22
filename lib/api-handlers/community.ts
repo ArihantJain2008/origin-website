@@ -1,5 +1,5 @@
-import { authenticatedUser, authConfig, fail, jsonBody, sameOrigin, userDatabase, type AccountRequest, type AccountResponse } from "./_account";
-import { isUuid } from "./_installers.js";
+import { authenticatedUser, authConfig, fail, jsonBody, sameOrigin, userDatabase, type AccountRequest, type AccountResponse } from "../../api/_account";
+import { isUuid } from "../../api/_installers.js";
 
 const requests = new Map<string, { count: number; until: number }>();
 function param(req: AccountRequest, name: string) { const value = req.query?.[name]; return Array.isArray(value) ? value[0] : value ?? ""; }

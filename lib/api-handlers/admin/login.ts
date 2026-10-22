@@ -1,4 +1,4 @@
-import { checkSameOrigin, createSession, jsonBody, loginAllowed, passwordHash, setSessionCookie } from "../_auth";
+import { checkSameOrigin, createSession, jsonBody, loginAllowed, passwordHash, setSessionCookie } from "../../../api/_auth";
 
 export default async function handler(req: { method?: string; headers: Record<string, string | string[] | undefined>; body?: unknown }, res: { status: (code: number) => any; json: (body: unknown) => void; setHeader: (name: string, value: string) => void }) {
   res.setHeader("Cache-Control", "no-store");

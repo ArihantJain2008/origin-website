@@ -1,5 +1,5 @@
-import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../_auth";
-import { isValidOfficialAsset, isValidOfficialRelease } from "../_installers.js";
+import { checkSameOrigin, jsonBody, requireAdmin, writeAdminAudit } from "../../../api/_auth";
+import { isValidOfficialAsset, isValidOfficialRelease } from "../../../api/_installers.js";
 
 type Request = { method?: string; query?: Record<string, string | string[] | undefined>; headers: Record<string, string | string[] | undefined>; body?: unknown };
 type Response = { status: (code: number) => Response; json: (body: unknown) => void; setHeader: (name: string, value: string) => void };
