@@ -13,23 +13,15 @@ import FAQ from "./components/FAQ";
 import { useEffect } from "react";
 import Footer from "./components/Footer";
 import Feedback from "./components/Feedback";
-import Admin from "./components/Admin";
-import AccountPage from "./components/Account";
-import Community from "./components/Community";
 
 export default function App() {
   const isFeedbackPage = window.location.pathname === "/feedback";
-  const isAdminPage = window.location.pathname.startsWith("/admin");
-  const isAccountPage = window.location.pathname === "/account";
 
   useEffect(() => {
-    document.title = isAdminPage ? "Admin — Origin" : isFeedbackPage ? "Feedback & Support — Origin" : "Origin — Your code. One place.";
-    const description = isAdminPage
-      ? "Origin administration."
-      : isFeedbackPage
+    document.title = isFeedbackPage ? "Feedback & Support — Origin" : "Origin — Your code. One place.";
+    const description = isFeedbackPage
       ? "Report bugs, request features, ask questions, and help shape the future of Origin."
       : "Origin is a developer workspace that organizes your projects and gets you coding faster.";
-    if (isAccountPage) document.title = "Your account — Origin";
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (!meta) {
       meta = document.createElement("meta");
@@ -37,10 +29,7 @@ export default function App() {
       document.head.appendChild(meta);
     }
     meta.content = description;
-  }, [isFeedbackPage, isAdminPage, isAccountPage]);
-
-  if (isAdminPage) return <Admin />;
-  if (isAccountPage) return <AccountPage />;
+  }, [isFeedbackPage]);
 
   if (isFeedbackPage) {
     return (
@@ -74,7 +63,6 @@ export default function App() {
         <HowItWorks />
         <Download />
         <Changelog />
-        <Community />
         <FAQ />
       </main>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Download as DownloadIcon, Apple, ExternalLink, MonitorSmartphone } from "lucide-react";
 import Reveal from "./Reveal";
 import { useReleases } from "@/lib/useReleases";
@@ -23,38 +23,11 @@ const platformLabels: Record<Platform, string> = {
 function findAsset(assets: PlatformAsset[], platform: Platform) {
   return assets.find((a) => a.platform === platform);
 }
-function assetHref(asset?: PlatformAsset) {
-  const id = asset && "installerId" in asset ? (asset as PlatformAsset & { installerId: string }).installerId : "";
-  return id ? `/api/download?asset=${encodeURIComponent(id)}` : asset?.asset.browser_download_url ?? RELEASES_URL;
-}
 
 export default function Download() {
   const { latest, status } = useReleases();
   const detected = useMemo(() => detectPlatform(), []);
-  const [catalog, setCatalog] = useState<Array<{ id: string; platform: Platform; filename: string; version: { version: string } }>>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  useEffect(() => {
-    let active = true;
-    fetch("/api/installers").then((response) => response.ok ? response.json() : null).then((result: { ok?: boolean; assets?: typeof catalog } | null) => {
-      if (active && result?.ok) setCatalog(result.assets ?? []);
-    }).catch(() => undefined);
-    return () => { active = false; };
-  }, []);
-  const assets = useMemo(() => assetsByPlatform(latest).map((item) => {
-    const registered = catalog.find((asset) => asset.filename === item.asset.name && asset.version.version === latest?.tag_name);
-    return registered ? { ...item, installerId: registered.id } : item;
-  }), [latest, catalog]);
-  useEffect(() => {
-    let active = true;
-    const tracked = assets.filter((asset) => "installerId" in asset && asset.installerId);
-    Promise.all(tracked.map(async (asset) => {
-      const id = (asset as PlatformAsset & { installerId: string }).installerId;
-      const response = await fetch(`/api/downloads?asset=${encodeURIComponent(id)}`);
-      const value = await response.json() as { ok?: boolean; uniqueDownloads?: number };
-      return [id, value.uniqueDownloads ?? 0] as const;
-    })).then((entries) => { if (active) setCounts(Object.fromEntries(entries)); }).catch(() => undefined);
-    return () => { active = false; };
-  }, [assets]);
+  const assets = useMemo(() => assetsByPlatform(latest), [latest]);
   const loading = status === "loading";
 
   // Primary CTA: the asset matching the visitor's detected platform,
@@ -94,7 +67,7 @@ export default function Download() {
 
           <div className="mt-8 flex flex-col items-center gap-4">
             <a
-              href={assetHref(primaryDownload)}
+              href={primaryDownload?.asset.browser_download_url ?? RELEASES_URL}
               target={primaryDownload ? undefined : "_blank"}
               rel={primaryDownload ? undefined : "noreferrer noopener"}
               aria-disabled={loading}
@@ -103,7 +76,6 @@ export default function Download() {
               <DownloadIcon size={17} aria-hidden="true" />
               {primaryLabel}
             </a>
-            {primaryDownload && "installerId" in primaryDownload && <p className="text-xs text-tertiary">{counts[(primaryDownload as PlatformAsset & { installerId: string }).installerId] ?? 0} unique completed downloads</p>}
             {latest && (
               <p className="text-xs text-tertiary">
                 Version {latest.tag_name.replace(/^v/, "")}
@@ -124,7 +96,6 @@ export default function Download() {
               asset={windows}
               loading={loading}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
-              counts={counts}
             />
             <PlatformCard
               icon={Apple}
@@ -135,7 +106,6 @@ export default function Download() {
               secondaryLabel="Intel"
               loading={loading}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
-              counts={counts}
             />
             <PlatformCard
               icon={MonitorSmartphone}
@@ -143,7 +113,6 @@ export default function Download() {
               asset={linux}
               loading={loading}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
-              counts={counts}
             />
           </div>
 
@@ -255,7 +224,6 @@ function PlatformCard({
   secondaryLabel,
   loading,
   unavailableLabel,
-  counts,
 }: {
   icon: typeof MonitorSmartphone;
   name: string;
@@ -265,7 +233,6 @@ function PlatformCard({
   secondaryLabel?: string;
   loading: boolean;
   unavailableLabel?: string;
-  counts: Record<string, number>;
 }) {
   const available = !!asset && !loading;
 
@@ -279,15 +246,14 @@ function PlatformCard({
       ) : available ? (
         <div className="mt-3 flex flex-col gap-1.5">
           <a
-            href={assetHref(asset)}
+            href={asset!.asset.browser_download_url}
             className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-hover"
           >
             {primaryLabel ? `Download (${primaryLabel})` : "Download"}
           </a>
-          {asset && "installerId" in asset && <span className="text-[11px] text-tertiary">{counts[(asset as PlatformAsset & { installerId: string }).installerId] ?? 0} unique downloads</span>}
           {secondaryAsset && (
             <a
-              href={assetHref(secondaryAsset)}
+              href={secondaryAsset.asset.browser_download_url}
               className="text-xs font-medium text-accent hover:underline"
             >
               {secondaryLabel} version
