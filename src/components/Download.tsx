@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download as DownloadIcon, Apple, ExternalLink, MonitorSmartphone } from "lucide-react";
 import Reveal from "./Reveal";
 import { useReleases } from "@/lib/useReleases";
+import { trackGitHubDownload } from "@/lib/downloadAnalytics";
 import {
   RELEASES_URL,
   LATEST_RELEASE_URL,
@@ -11,6 +12,8 @@ import {
   type Platform,
   type PlatformAsset,
 } from "@/lib/github";
+
+type DownloadPlatform = "windows" | "macos" | "linux";
 
 const platformLabels: Record<Platform, string> = {
   windows: "Windows",
@@ -81,6 +84,23 @@ export default function Download() {
       ? `Download ${detected === "unknown" ? "Origin" : `for ${platformLabels[detected]}`}`
       : "Download Origin";
 
+  const trackDownload = (asset: PlatformAsset, platform: DownloadPlatform) => {
+    if (!latest) return;
+    trackGitHubDownload(latest.tag_name, asset.asset.name, platform);
+  };
+
+  const trackPrimaryDownload = () => {
+    if (!primaryDownload) return;
+
+    if (detected === "windows") {
+      trackDownload(primaryDownload, "windows");
+    } else if (detected === "macos-arm" || detected === "macos-intel") {
+      trackDownload(primaryDownload, "macos");
+    } else if (detected === "linux") {
+      trackDownload(primaryDownload, "linux");
+    }
+  };
+
   return (
     <section id="download" className="relative py-24 sm:py-32">
       <div
@@ -116,6 +136,7 @@ export default function Download() {
               target={primaryDownload ? undefined : "_blank"}
               rel={primaryDownload ? undefined : "noreferrer noopener"}
               aria-disabled={loading}
+              onClick={trackPrimaryDownload}
               className="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-accent-strong sm:w-auto"
             >
               <DownloadIcon size={17} aria-hidden="true" />
@@ -140,6 +161,7 @@ export default function Download() {
               name="Windows"
               asset={windows}
               loading={loading}
+              onTrack={(asset) => trackDownload(asset, "windows")}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
             />
             <PlatformCard
@@ -150,6 +172,7 @@ export default function Download() {
               primaryLabel={macArm ? "Apple Silicon" : "Intel"}
               secondaryLabel="Intel"
               loading={loading}
+              onTrack={(asset) => trackDownload(asset, "macos")}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
             />
             <PlatformCard
@@ -157,6 +180,7 @@ export default function Download() {
               name="Linux"
               asset={linux}
               loading={loading}
+              onTrack={(asset) => trackDownload(asset, "linux")}
               unavailableLabel={status === "error" ? "Release info unavailable" : undefined}
             />
           </div>
@@ -268,6 +292,7 @@ function PlatformCard({
   primaryLabel,
   secondaryLabel,
   loading,
+  onTrack,
   unavailableLabel,
 }: {
   icon: typeof MonitorSmartphone;
@@ -277,6 +302,7 @@ function PlatformCard({
   primaryLabel?: string;
   secondaryLabel?: string;
   loading: boolean;
+  onTrack: (asset: PlatformAsset) => void;
   unavailableLabel?: string;
 }) {
   const available = !!asset && !loading;
@@ -292,6 +318,7 @@ function PlatformCard({
         <div className="mt-3 flex flex-col gap-1.5">
           <a
             href={asset!.asset.browser_download_url}
+            onClick={() => onTrack(asset!)}
             className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-hover"
           >
             {primaryLabel ? `Download (${primaryLabel})` : "Download"}
@@ -299,6 +326,7 @@ function PlatformCard({
           {secondaryAsset && (
             <a
               href={secondaryAsset.asset.browser_download_url}
+              onClick={() => onTrack(secondaryAsset)}
               className="text-xs font-medium text-accent hover:underline"
             >
               {secondaryLabel} version
