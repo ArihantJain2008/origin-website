@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Github, Menu, X } from "lucide-react";
 import { REPO_URL } from "@/lib/github";
+import { useDownloadCount } from "@/lib/useDownloadCount";
+import DownloadCountLink from "./DownloadCountLink";
 
 const links = [
   { label: "Features", href: "#features" },
@@ -13,6 +15,7 @@ const links = [
 
 export default function Navbar() {
   const isFeedbackPage = window.location.pathname === "/feedback";
+  const downloadCount = useDownloadCount();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -65,12 +68,12 @@ export default function Navbar() {
             <Github size={15} aria-hidden="true" />
             GitHub
           </a>
-          <a
+          <DownloadCountLink
             href="#download"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-[0_1px_0_0_rgb(255_255_255/0.15)_inset] transition-colors hover:bg-accent-strong"
-          >
-            Download
-          </a>
+            label="Download"
+            count={downloadCount}
+            className="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-[0_1px_0_0_rgb(255_255_255/0.15)_inset] hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          />
         </div>
 
         <button
@@ -113,6 +116,11 @@ export default function Navbar() {
             <a
               href="#download"
               onClick={() => setOpen(false)}
+              aria-label={
+                downloadCount === null
+                  ? "Download Origin"
+                  : `Download Origin. ${downloadCount.toLocaleString()} unique visitors.`
+              }
               className="flex items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white"
             >
               Download Origin

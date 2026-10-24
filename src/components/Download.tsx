@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { Download as DownloadIcon, Apple, ExternalLink, MonitorSmartphone } from "lucide-react";
+import { useMemo } from "react";
+import { Apple, ExternalLink, MonitorSmartphone } from "lucide-react";
 import Reveal from "./Reveal";
+import DownloadCountLink from "./DownloadCountLink";
+import { useDownloadCount } from "@/lib/useDownloadCount";
 import { useReleases } from "@/lib/useReleases";
 import { trackGitHubDownload } from "@/lib/downloadAnalytics";
 import {
@@ -28,42 +30,11 @@ function findAsset(assets: PlatformAsset[], platform: Platform) {
 }
 
 export default function Download() {
-  const [downloadCount, setDownloadCount] = useState<number | null>(null);
-  const [countLoading, setCountLoading] = useState(true);
+  const downloadCount = useDownloadCount();
   const { latest, status } = useReleases();
   const detected = useMemo(() => detectPlatform(), []);
   const assets = useMemo(() => assetsByPlatform(latest), [latest]);
   const loading = status === "loading";
-
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/download-count")
-      .then((response) => {
-        if (!response.ok) throw new Error("Download count unavailable");
-        return response.json() as Promise<{ count?: unknown }>;
-      })
-      .then(({ count }) => {
-        if (
-          active &&
-          typeof count === "number" &&
-          Number.isSafeInteger(count) &&
-          count >= 0
-        ) {
-          setDownloadCount(count);
-        }
-      })
-      .catch(() => {
-        // The counter is optional; leave it hidden if the API is unavailable.
-      })
-      .finally(() => {
-        if (active) setCountLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Primary CTA: the asset matching the visitor's detected platform,
   // if the latest release actually shipped one. Never a guessed URL.
@@ -113,35 +84,22 @@ export default function Download() {
           <h2 className="text-balance text-3xl font-semibold tracking-tight text-primary sm:text-5xl">
             Start with Origin.
           </h2>
-          {countLoading ? (
-            <p
-              className="mt-3 text-sm text-tertiary"
-              aria-live="polite"
-              aria-busy="true"
-            >
-              Loading download count…
-            </p>
-          ) : downloadCount !== null ? (
-            <p className="mt-3 text-sm text-tertiary" aria-live="polite">
-              {downloadCount.toLocaleString()} unique downloads
-            </p>
-          ) : null}
           <p className="mt-4 text-[17px] leading-relaxed text-secondary">
             Free to download. Built for developers who want their projects in one place.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4">
-            <a
+            <DownloadCountLink
               href={primaryDownload?.asset.browser_download_url ?? RELEASES_URL}
               target={primaryDownload ? undefined : "_blank"}
               rel={primaryDownload ? undefined : "noreferrer noopener"}
-              aria-disabled={loading}
+              ariaDisabled={loading}
               onClick={trackPrimaryDownload}
-              className="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-accent-strong sm:w-auto"
-            >
-              <DownloadIcon size={17} aria-hidden="true" />
-              {primaryLabel}
-            </a>
+              label={primaryLabel}
+              count={downloadCount}
+              iconInDefaultState
+              className="flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-accent-strong focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:w-auto"
+            />
             {latest && (
               <p className="text-xs text-tertiary">
                 Version {latest.tag_name.replace(/^v/, "")}
